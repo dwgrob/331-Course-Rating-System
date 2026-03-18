@@ -43,7 +43,19 @@ def home():
 
 @app.route('/createReview')
 def createReview():
-    return 'test'
+    course311 = course(311, 'CSCI', 3)
+    course370 = course(370, 'CSCI', 3)
+    course260 = course(260, 'CSCI', 2)
+    course265 = course(265, 'CSCI', 2)
+    
+    
+    
+    return render_template("createReview.html")
+
+
+@app.route('/course')
+def courseRev():
+    return render_template("reviewsPage.html")
 
 if __name__ == '__main__':
     app.run()
