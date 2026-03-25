@@ -4,6 +4,9 @@ import random
 
 app = Flask(__name__)
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///courses.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 
@@ -90,10 +93,11 @@ def clearReviews():
 
 @app.route('/')
 def home():
-    return render_template("home.html")
+    courses = get_courses()
+    return render_template('home.html', courses=courses)
 
 
-@app.route('/createReview')
+@app.route('/createReview', methods=['GET', 'POST'])
 def createReview():
     courses = get_courses()
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course Reviews</title>
+</head>
+<body>
+    <h1>Courses with Reviews</h1>
+
+    {% for num, c in courses.items() %}
+    <h2>{{ c.program }} {{ c.id }}</h2>
+    {% if c.reviews %}
+    <ul>
+        {% for r in c.reviews %}
+        <li>
+            Difficulty: {{ r.difficulty }}<br>
+            Workload: {{ r.workLoad }}<br>
+            Enjoyment: {{ r.enjoyment }}<br>
+            Comment: {{ r.comment }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No reviews yet.</p>
+    {% endif %}
+    {% endfor %}
+
+</body>
+</html>
