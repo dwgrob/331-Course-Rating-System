@@ -8,8 +8,114 @@
             }
         </style>
 
+<<<<<<< Updated upstream
     </head>
     <body>
             <button id="Enter" type="button" onclick="window.location.href = '/createReview' ; " class="button">Enter</button>
     </body>
+=======
+            .btn.outline {
+                background: white;
+                color: #2b78e4;
+                border: 1px solid #2b78e4;
+            }
+
+        details summary {
+            cursor: pointer;
+            list-style: none;
+        }
+
+    </style>
+    <script>
+        // search filter
+        document.addEventListener('DOMContentLoaded', function () {
+            var input = document.getElementById('course-search');
+            var cards = document.querySelectorAll('.card');
+            var noResults = document.getElementById('no-results');
+
+            input.addEventListener('input', function () {
+                var query = input.value.toLowerCase();
+                var found = 0;
+                cards.forEach(function (card) {
+                    var text = card.getAttribute('data-search').toLowerCase();
+                    if (text.includes(query)) {
+                        card.style.display = '';
+                        found++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                noResults.style.display = found === 0 ? '' : 'none';
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VIU Course Reviews</h1>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <form action="{{ url_for('genReviews') }}" method="POST">
+                    <button class="btn" type="submit">Generate Reviews</button>
+                </form>
+                <form action="{{ url_for('delReviews') }}" method="POST">
+                    <button class="btn" type="submit">Delete Reviews</button>
+                </form>
+                <span style="color: #666; font-size: 14px;">Logged in as: 123 456 789 [STUDENT]</span>
+                <button class="btn" onclick="location.href='/createReview'">Leave a Review</button>
+                <a class="btn outline" href="/login">Logout</a>
+            </div>
+        </div>
+
+        <p>Click a course to expand and see its reviews.</p>
+
+        <div style="margin: 12px 0;">
+            <input id="course-search" placeholder="Search courses (e.g. CSCI 311)"
+                   style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;" />
+        </div>
+        <div id="no-results" style="display: none; color: #666; padding: 8px;">No courses match your search.</div>
+
+        {% for num, c in courses.items() %}
+        <div class="card" data-search="{{ c.program }} {{ c.id }}">
+            <details>
+                <summary>
+                    <div class="course-row">
+                        <div>
+                            <div class="course-title">{{ c.program }} {{ c.id }} - Year {{ c.courseYear }}</div>
+                            <div style="font-size: 13px; color: #555; margin-top: 4px;">
+                                {% set avg = c.average_ratings() %}
+                                {% if avg.difficulty is not none %}
+                                Difficulty: {{ avg.difficulty }} · Workload: {{ avg.workLoad }} · Enjoyment: {{ avg.enjoyment }}
+                                {% else %}
+                                No ratings yet
+                                {% endif %}
+                            </div>
+                        </div>
+                        <button class="btn outline" onclick="location.href='/createReview?course={{ c.id }}'; event.stopPropagation();">
+                            Add Review
+                        </button>
+                    </div>
+                </summary>
+                <div class="reviews">
+                    {% if c.reviews %}
+                    {% for r in c.reviews %}
+                    <div class="review">
+                        <strong>Difficulty:</strong> {{ r.difficulty }} &nbsp;
+                        <strong>Workload:</strong> {{ r.workLoad }} &nbsp;
+                        <strong>Enjoyment:</strong> {{ r.enjoyment }}
+                        {% if r.comment %}
+                        <div>{{ r.comment }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="review">No reviews yet.</div>
+                    {% endif %}
+                </div>
+            </details>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+>>>>>>> Stashed changes
 </html>
