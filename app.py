@@ -10,6 +10,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///courses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = "secretkey"
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 db = SQLAlchemy(app)
 
 
@@ -41,7 +44,7 @@ class ReviewModel(db.Model):
     enjoyment = db.Column(db.Integer)
     comment = db.Column(db.Text)
 
-class Users(db.Model):
+class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
@@ -150,7 +153,20 @@ def courseRev():
 
 @app.route('/login')
 def login():
+    #if request.method == "POST":
+        #username = request.form.get("username")
+        #password = request.form.get("password")
+
+        #user = Users.query.filter_by(username=username).first()
+
+        #if user and check_password_hash(user.password, password):
+            #login_user(user)
+            #return redirect(url_for("home"))
+        #else:
+            #return render_template("login.html", error="Invalid username or password")
     return render_template('login.html')
+
+
 
 @app.route('/generateReviews', methods=['GET', 'POST'])
 def genReviews():
@@ -162,6 +178,25 @@ def genReviews():
 def delReviews():
     clearReviews()
     return redirect(url_for('home'))
+
+@app.route('/register', methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if Users.query.filter_by(username=username).first():
+            return render_template("register.html", error="Username already taken!")
+
+        hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+
+        new_user = Users(username=username, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for("login"))
+    
+    return render_template("register.html")
 
 
 if __name__ == '__main__':
