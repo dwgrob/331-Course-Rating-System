@@ -73,6 +73,12 @@
                 border: 1px solid #2b78e4;
             }
 
+            .btn.outline {
+                background: white;
+                color: #2b78e4;
+                border: 1px solid #2b78e4;
+            }
+
         details summary {
             cursor: pointer;
             list-style: none;
@@ -108,6 +114,12 @@
         <div class="header">
             <h1>VIU Course Reviews</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
+                <form action="{{ url_for('genReviews') }}" method="POST">
+                    <button class="btn" type="submit">Generate Reviews</button>
+                </form>
+                <form action="{{ url_for('delReviews') }}" method="POST">
+                    <button class="btn" type="submit">Delete Reviews</button>
+                </form>
                 <span style="color: #666; font-size: 14px;">Logged in as: 123 456 789 [STUDENT]</span>
                 <button class="btn" onclick="location.href='/createReview'">Leave a Review</button>
                 <a class="btn outline" href="/login">Logout</a>

@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+import random
 
 app = Flask(__name__)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///courses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -59,6 +61,35 @@ def get_courses():
         courses[c.id] = c
     return courses
 
+def genRandomReviews(numReviews=10):
+    courses = CourseModel.query.all()
+
+    comments = [
+        "Was a Blast!!",
+        "Was so hard!!",
+        "I learned so much.",
+        "Wait this isn't rate my professor.",
+        "I think that this course was super useful for my future career.",
+        "This class was useless!!",
+        "Was a hard course but I am a better person because of it."
+    ]
+
+    for course in courses:
+        for _ in range(numReviews):
+            review = ReviewModel(
+                course_id=course.id,
+                difficulty=random.randint(1, 5),
+                workLoad=random.randint(1, 5),
+                enjoyment=random.randint(1, 5),
+                comment=random.choice(comments)
+            )
+            db.session.add(review)
+    db.session.commit()
+
+def clearReviews():
+    ReviewModel.query.delete()
+    db.session.commit()
+    
 
 @app.route('/')
 def home():
@@ -109,6 +140,17 @@ def courseRev():
 @app.route('/login')
 def login():
     return render_template('login.html')
+
+@app.route('/generateReviews', methods=['GET', 'POST'])
+def genReviews():
+    genRandomReviews(10)
+    return redirect(url_for('home'))
+
+
+@app.route('/clearReviews', methods=['GET', 'POST'])
+def delReviews():
+    clearReviews()
+    return redirect(url_for('home'))
 
 
 if __name__ == '__main__':

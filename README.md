@@ -12,7 +12,7 @@ Daniel Robinson and Spencer Strutt
  
 **1. Clone the repository**
 ```
-git clone https://github.com/spencer-crup/331proto
+git clone https://github.com/dwgrob/331-Course-Rating-System
 cd your-repo-name
 ```
  
@@ -58,3 +58,4 @@ The database will be created automatically on first run with a few default cours
  
 - The database file (`courses.db`) is stored in the `instance/` folder and is not tracked by git
 - Login/authentication is not yet implemented, it is just a placeholder for now
+- The Generate Review button will generate 10 reviews for each course, and the Delete Reviews button will clear all of the reviews that have been made
