@@ -1,6 +1,30 @@
-<html><head><title>Login</title></head>
+<html>
+<head>
+  <title>Login</title>
+</head>
 <body>
-  <h1>Login (placeholder)</h1>
-  <p>placeholder FAKE PROOF OF CONCEPT AUTHENTICATION HERE [FOR EARLY PROTOTYPE]</p>
-  <p><a href="/">Back</a></p>
-</body></html>
+    <nav>
+        <ul>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/register">Create account</a></li>
+        </ul>
+    </nav>
+    <h1>Currently Under Construction, press the go button to return to the homepage</h1>
+    
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <!--
+    
+    <form action="/login" method="post">
+        <label for="username">Username:</label>
+        <input type="text" name="username" required />
+        <label for="password">Password:</label>
+        <input type="password" name="password" required />
+        <button type="submit">Login</button>
+    </form>
+    -->
+    <button onclick="location.href='/'">Go Home</button>
+</body>
+</html>
