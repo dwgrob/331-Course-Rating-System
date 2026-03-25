@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import random
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, logout_user
 
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///courses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SECRET_KEY"] = "secretkey"
 
 db = SQLAlchemy(app)
 
@@ -37,6 +40,11 @@ class ReviewModel(db.Model):
     workLoad = db.Column(db.Integer)
     enjoyment = db.Column(db.Integer)
     comment = db.Column(db.Text)
+
+class Users(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
 
 
 def seed_courses():
@@ -89,7 +97,10 @@ def genRandomReviews(numReviews=10):
 def clearReviews():
     ReviewModel.query.delete()
     db.session.commit()
-    
+
+@login_manager.user_loader
+def loadUser(user_id):
+    return Users.query.get(int(user_id)) 
 
 @app.route('/')
 def home():
