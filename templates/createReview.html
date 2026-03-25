@@ -1,16 +1,182 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<Title>Leave A Review</title>
+    <title>Leave A Review</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f9;
+            color: #222;
+            padding: 16px;
+        }
 
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
 
+        .card {
+            background: white;
+            padding: 16px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
 
+        .field {
+            margin: 12px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .stars {
+            font-size: 28px;
+            color: #d8d8d8;
+            cursor: pointer;
+        }
+
+            .stars span {
+                padding: 4px;
+            }
+
+                .stars span.filled {
+                    color: #f5b301;
+                }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .btn {
+            background: #2b78e4;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+            .btn.secondary {
+                background: #6c757d;
+            }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-left: 8px;
+            display: none;
+        }
+    </style>
+    <script>
+        function initStars(name) {
+            var stars = Array.from(document.querySelectorAll('.stars[data-name="' + name + '"] span'));
+            var hidden = document.getElementById(name);
+
+            function highlight(val) {
+                for (var i = 0; i < stars.length; i++) {
+                    if (i < val) stars[i].classList.add('filled');
+                    else stars[i].classList.remove('filled');
+                }
+            }
+
+            for (var i = 0; i < stars.length; i++) {
+                (function (idx) {
+                    stars[idx].addEventListener('click', function () {
+                        hidden.value = idx + 1;
+                        highlight(idx + 1);
+                    });
+                    stars[idx].addEventListener('mouseover', function () { highlight(idx + 1); });
+                })(i);
+            }
+
+            document.querySelector('.stars[data-name="' + name + '"]').addEventListener('mouseleave', function () {
+                highlight(parseInt(hidden.value) || 0);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initStars('difficulty');
+            initStars('workload');
+            initStars('enjoyment');
+
+            document.querySelector('form').addEventListener('submit', function (e) {
+                var valid = true;
+                ['difficulty', 'workload', 'enjoyment'].forEach(function (name) {
+                    var val = parseInt(document.getElementById(name).value) || 0;
+                    var err = document.getElementById(name + '-err');
+                    if (val < 1) {
+                        err.style.display = 'inline';
+                        valid = false;
+                    } else {
+                        err.style.display = 'none';
+                    }
+                });
+                if (!valid) e.preventDefault();
+            });
+        });
+    </script>
 </head>
-
 <body>
-<div>Let us know what you think</div>    
+    <div class="container">
+        <div class="card">
+            <h2>Leave a Review</h2>
+            <form method="post" action="/createReview">
 
+                <div class="field">
+                    <label for="course">Course</label>
+                    <select id="course" name="course">
+                        {% for num, c in courses.items() %}
+                        <option value="{{ num }}" {% if selected_course == num %}selected{% endif %}>
+                            {{ c.program }} {{ num }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
+                <div class="field">
+                    <label>Difficulty <span id="difficulty-err" class="error">Please select a rating.</span></label>
+                    <input type="hidden" id="difficulty" name="difficulty" value="0">
+                    <div class="stars" data-name="difficulty">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Workload <span id="workload-err" class="error">Please select a rating.</span></label>
+                    <input type="hidden" id="workload" name="workload" value="0">
+                    <div class="stars" data-name="workload">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Enjoyment <span id="enjoyment-err" class="error">Please select a rating.</span></label>
+                    <input type="hidden" id="enjoyment" name="enjoyment" value="0">
+                    <div class="stars" data-name="enjoyment">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="comment">Comment (optional)</label>
+                    <textarea id="comment" name="comment" rows="4"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button class="btn" type="submit">Submit Review</button>
+                    <button type="button" class="btn secondary" onclick="location.href='/'">Cancel</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
 </body>
 </html>

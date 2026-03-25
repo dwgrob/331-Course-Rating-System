@@ -5,5 +5,7 @@ pyvenv.cfg
 venv/
 Lib/
 Scripts/
-
-
+instance/
+__pycache__/
+*.pyc
+.vs/

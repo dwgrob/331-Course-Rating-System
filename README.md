@@ -4,18 +4,57 @@ CSCI 331 Course Rating Project
 ### Authors
 Daniel Robinson and Spencer Strutt
 
-### How to run
-Create a virtual environment using the following command in the directory you want to hold the project in
-- python3 -m venv courseRatingSystem
-
-Once the virtual environment is created download the files and move them to the newly created direcotry
-
-After the files are downloaded navigate to the directory and run the following command to avtivate the virtual environment
-- source bin/activate
-
-Once active- to run the program enter the command 
-- python3 prototype.py
-
-After running deactivate the virtual environment using the command
-- deactivate
-
+## Requirements
+ 
+- Python 3.x
+ 
+## Setup
+ 
+**1. Clone the repository**
+```
+git clone https://github.com/spencer-crup/331proto
+cd your-repo-name
+```
+ 
+**2. Create and activate a virtual environment**
+ 
+Windows:
+```
+python -m venv venv
+venv\Scripts\activate
+```
+ 
+Mac/Linux:
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+ 
+**3. Install dependencies**
+```
+pip install -r requirements
+```
+ 
+**4. Run the app**
+```
+python3 app.py
+```
+ 
+**5. Open your browser and go to:**
+```
+http://127.0.0.1:5000
+```
+ 
+The database will be created automatically on first run with a few default courses already added.
+ 
+## Pages
+ 
+- `/` — Home page, lists all courses and their reviews
+- `/createReview` — Form to leave a review for a course
+- `/course` — Plain list of all courses and reviews
+- `/login` — Placeholder login page (not yet implemented)
+ 
+## Notes
+ 
+- The database file (`courses.db`) is stored in the `instance/` folder and is not tracked by git
+- Login/authentication is not yet implemented, it is just a placeholder for now
