@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import random
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user, logout_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 app = Flask(__name__)
 
@@ -50,8 +50,10 @@ class Users(UserMixin, db.Model):
     password = db.Column(db.String(50), nullable=False)
 
 
-def seed_courses():
+with app.app_context():
     db.create_all()
+
+def seed_courses():
     default_courses = [
         (311, 'CSCI', 3),
         (370, 'CSCI', 3),
@@ -151,19 +153,19 @@ def courseRev():
     return render_template('reviewsPage.html', courses=courses)
 
 
-@app.route('/login')
+@app.route('/login',  methods=['GET', 'POST'])
 def login():
-    #if request.method == "POST":
-        #username = request.form.get("username")
-        #password = request.form.get("password")
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        #user = Users.query.filter_by(username=username).first()
+        user = Users.query.filter_by(username=username).first()
 
-        #if user and check_password_hash(user.password, password):
-            #login_user(user)
-            #return redirect(url_for("home"))
-        #else:
-            #return render_template("login.html", error="Invalid username or password")
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for("home"))
+        else:
+            return render_template("login.html", error="Invalid username or password")
     return render_template('login.html')
 
 
@@ -197,6 +199,12 @@ def register():
         return redirect(url_for("login"))
     
     return render_template("register.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("home"))
 
 
 if __name__ == '__main__':

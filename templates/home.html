@@ -114,15 +114,20 @@
         <div class="header">
             <h1>VIU Course Reviews</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
+                {% if current_user.is_authenticated %}
                 <form action="{{ url_for('genReviews') }}" method="POST">
                     <button class="btn" type="submit">Generate Reviews</button>
                 </form>
                 <form action="{{ url_for('delReviews') }}" method="POST">
                     <button class="btn" type="submit">Delete Reviews</button>
                 </form>
-                <span style="color: #666; font-size: 14px;">Logged in as: 123 456 789 [STUDENT]</span>
+                <span style="color: #666; font-size: 14px;">Logged in as: {{ current_user.username }}</span>
                 <button class="btn" onclick="location.href='/createReview'">Leave a Review</button>
+                <a class="btn" href="/logout">Logout</a>
+                {% else %}
                 <a class="btn" href="/login">Login</a>
+                <a class="btn" href="/register">Register</a>
+                {% endif %}
             </div>
         </div>
 
@@ -150,9 +155,15 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% if current_user.is_authenticated %}
                         <button class="btn outline" onclick="location.href='/createReview?course={{ c.id }}'; event.stopPropagation();">
                             Add Review
                         </button>
+                        {% else %}
+                        <button class="btn outline" onclick="location.href='/login'; event.stopPropagation();">
+                            login to leave a review
+                        </button>
+                        {% endif %}
                     </div>
                 </summary>
                 <div class="reviews">
