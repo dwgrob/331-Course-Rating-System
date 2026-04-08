@@ -73,11 +73,15 @@
                 border: 1px solid #2b78e4;
             }
 
-            .btn.outline {
+            .btn.del {
                 background: white;
                 color: #2b78e4;
                 border: 1px solid #2b78e4;
+                display: flex;
+                align-items: flex-end;
             }
+
+
 
         details summary {
             cursor: pointer;
@@ -107,6 +111,84 @@
                 noResults.style.display = found === 0 ? '' : 'none';
             });
         });
+
+        function makeTriangleChart(difficulty, workload, enjoyment) {
+        const W = 210, H = 180;
+        const cx = W / 2, cy = H / 2 + 14;
+        const maxR = 54;
+        const MIN = 1, MAX = 5;
+
+        // Three corner directions (top, bottom-left, bottom-right)
+        const angles = [-Math.PI / 2, -Math.PI / 2 + (2 * Math.PI / 3), -Math.PI / 2 + (4 * Math.PI / 3)];
+        const values = [difficulty, workload, enjoyment];
+        const labels = ['Difficulty', 'Workload', 'Enjoyment'];
+
+        // Outer triangle corners (at max scale)
+        const outerPts = angles.map(a => [
+            cx + maxR * Math.cos(a),
+            cy + maxR * Math.sin(a)
+        ]);
+
+        // Grid triangles at each integer step
+        let gridLines = '';
+        for (let step = 1; step <= 5; step++) {
+            const r = (step / MAX) * maxR;
+            const pts = angles.map(a => `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`).join(' ');
+            gridLines += `<polygon points="${pts}" fill="none" stroke="#ccc" stroke-width="0.5"/>`;
+        }
+
+        // Axis lines from center to each corner
+        let axisLines = outerPts.map(([x, y]) =>
+            `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#ccc" stroke-width="0.5"/>`
+        ).join('');
+
+        // Data polygon
+        const dataPts = angles.map((a, i) => {
+            const val = Math.max(0, values[i] || 0);
+            const r = (val / MAX) * maxR;
+            return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+        }).join(' ');
+
+        // Corner labels (positioned outside the triangle)
+        const labelOffset = 18;
+        const labelEls = angles.map((a, i) => {
+            const x = cx + (maxR + labelOffset) * Math.cos(a);
+            const y = cy + (maxR + labelOffset) * Math.sin(a);
+            const anchor = Math.cos(a) > 0.3 ? 'start' : Math.cos(a) < -0.3 ? 'end' : 'middle';
+            return `<text x="${x}" y="${y + 4}" text-anchor="${anchor}" font-size="9" fill="#555" font-family="Arial, sans-serif">${labels[i]}</text>`;
+        }).join('');
+
+        // Value dots and labels
+        const dotEls = angles.map((a, i) => {
+            const val = Math.max(0, values[i] || 0);
+            const r = (val / MAX) * maxR;
+            const x = cx + r * Math.cos(a);
+            const y = cy + r * Math.sin(a);
+            return `<circle cx="${x}" cy="${y}" r="3" fill="#2b78e4"/>`;
+        }).join('');
+
+        return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+            ${gridLines}
+            ${axisLines}
+            <polygon points="${dataPts}" fill="#2b78e4" fill-opacity="0.15" stroke="#2b78e4" stroke-width="1.5"/>
+            ${dotEls}
+            ${labelEls}
+        </svg>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.triangle-chart').forEach(function (el) {
+            const d = parseFloat(el.dataset.difficulty) || 0;
+            const w = parseFloat(el.dataset.workload) || 0;
+            const e = parseFloat(el.dataset.enjoyment) || 0;
+            if (d === 0 && w === 0 && e === 0) {
+                el.innerHTML = '<span style="font-size:12px;color:#999;">No ratings yet</span>';
+            } else {
+                el.innerHTML = makeTriangleChart(d, w, e);
+            }
+        });
+    });
+
     </script>
 </head>
 <body>
@@ -157,7 +239,14 @@
                                 No ratings yet
                                 {% endif %}
                             </div>
+                
                         </div>
+                        {% set avg = c.average_ratings() %}
+                            <div class="triangle-chart" 
+                                data-difficulty="{{ avg.difficulty if avg.difficulty is not none else 0 }}"
+                                data-workload="{{ avg.workLoad if avg.workLoad is not none else 0 }}"
+                                data-enjoyment="{{ avg.enjoyment if avg.enjoyment is not none else 0 }}">
+                            </div>
                         {% if current_user.is_authenticated %}
                         <button class="btn outline" onclick="location.href='/createReview?course={{ c.id }}'; event.stopPropagation();">
                             Add Review
@@ -182,7 +271,7 @@
                         {% endif %}
                         {% for role in current_user.roles %}
                             {% if role.name == 'Admin' %}
-                            <button class="btn outline" onclick="location.href='/delete/{{ r.id }}'; event.stopPropagation();">Delete Review</button>
+                            <a class="btn del" onclick="location.href='/delete/{{ r.id }}'; event.stopPropagation();">Delete Review</a>
                             {% endif %}
                         {% endfor %}
                     </div>
