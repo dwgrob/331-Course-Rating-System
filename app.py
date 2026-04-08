@@ -45,7 +45,7 @@ class ReviewModel(db.Model):
     workLoad = db.Column(db.Integer)
     enjoyment = db.Column(db.Integer)
     comment = db.Column(db.Text)
-    writer = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    writer = db.Column(db.String(50), nullable=False)
 
 roles_users = db.Table('roles_users', 
     db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
@@ -58,7 +58,8 @@ class Users(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
     roles = db.relationship('Role', secondary=roles_users, backref='roled')
-    reviews = db.relationship('ReviewModel', backref='writed')
+    def is_admin(self):
+        return any(role.name == 'Admin' for role in self.roles)
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
@@ -86,12 +87,10 @@ def seed_courses():
     db.session.commit()
 
 def create_roles():
-    admin = Role(id=1, name= 'Admin')
-    user = Role(id=2, name = 'user')
-
-    db.session.add(admin)
-    db.session.add(user)
-
+    if not Role.query.filter_by(name='Admin').first():
+        db.session.add(Role(id=1, name='Admin'))
+    if not Role.query.filter_by(name='user').first():
+        db.session.add(Role(id=2, name='user'))
     db.session.commit()
 
 
@@ -162,7 +161,7 @@ def createReview():
         if not course:
             return "Course not found", 400
 
-        rev = ReviewModel(course_id=course.id, difficulty=difficulty, workLoad=workload, enjoyment=enjoyment, comment=comment, writer=current_user.id)
+        rev = ReviewModel(course_id=course.id, difficulty=difficulty, workLoad=workload, enjoyment=enjoyment, comment=comment, writer=current_user.username)
 
         db.session.add(rev)
         db.session.commit()
@@ -206,14 +205,15 @@ def genReviews():
     return redirect(url_for('home'))
 
 @app.route('/delete/<int:id>')
-@roles_accepted('Admin')
+@login_required
 def delete(id):
+    if not current_user.is_admin():
+        return "Unauthorized", 403
     reviewtoDelete = ReviewModel.query.get(int(id))
     try:
         db.session.delete(reviewtoDelete)
         db.session.commit()
         return redirect('/')
-
     except:
         return "Couldn't delete review"
 
@@ -236,7 +236,7 @@ def register():
         new_user = Users(username=username, password=hashed_password)
         role = Role.query.filter_by(id=int(request.form['options'])).first()
         if role:
-            Users.roles.append(role)
+            new_user.roles.append(role)
         db.session.add(new_user)
         db.session.commit()
 
