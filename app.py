@@ -26,7 +26,7 @@ class CourseModel(db.Model):
     courseYear = db.Column(db.Integer, nullable=False)
     reviews = db.relationship('ReviewModel', backref='course', cascade='all, delete-orphan', lazy=True)
 
-    #funtion to get average rating to us for the display
+    #function to get average rating to us for the display
     def average_ratings(self):
         if not self.reviews:
             return {'difficulty': None, 'workLoad': None, 'enjoyment': None}
