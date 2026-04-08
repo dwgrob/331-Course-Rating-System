@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import random
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_security import Security, SQLAlchemySessionUserDatastore, roles_accepted, RoleMixin
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 db = SQLAlchemy(app)
+
 
 
 class CourseModel(db.Model):
@@ -43,12 +45,28 @@ class ReviewModel(db.Model):
     workLoad = db.Column(db.Integer)
     enjoyment = db.Column(db.Integer)
     comment = db.Column(db.Text)
+    writer = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+roles_users = db.Table('roles_users', 
+    db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+    )
 
 class Users(UserMixin, db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
+    roles = db.relationship('Role', secondary=roles_users, backref='roled')
+    reviews = db.relationship('ReviewModel', backref='writed')
 
+class Role(db.Model, RoleMixin):
+    __tablename__ = 'role'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+
+user_datastore = SQLAlchemySessionUserDatastore(db.session, Users, Role)
+#security = Security(app, user_datastore)
 
 with app.app_context():
     db.create_all()
@@ -65,6 +83,15 @@ def seed_courses():
     for cid, prog, yr in default_courses:
         if not db.session.get(CourseModel, cid):
             db.session.add(CourseModel(id=cid, program=prog, courseYear=yr))
+    db.session.commit()
+
+def create_roles():
+    admin = Role(id=1, name= 'Admin')
+    user = Role(id=2, name = 'user')
+
+    db.session.add(admin)
+    db.session.add(user)
+
     db.session.commit()
 
 
@@ -94,7 +121,8 @@ def genRandomReviews(numReviews=10):
                 difficulty=random.randint(1, 5),
                 workLoad=random.randint(1, 5),
                 enjoyment=random.randint(1, 5),
-                comment=random.choice(comments)
+                comment=random.choice(comments),
+                writer='Admin'
             )
             db.session.add(review)
     db.session.commit()
@@ -102,6 +130,7 @@ def genRandomReviews(numReviews=10):
 def clearReviews():
     ReviewModel.query.delete()
     db.session.commit()
+
 
 @login_manager.user_loader
 def loadUser(user_id):
@@ -133,7 +162,8 @@ def createReview():
         if not course:
             return "Course not found", 400
 
-        rev = ReviewModel(course_id=course.id, difficulty=difficulty, workLoad=workload, enjoyment=enjoyment, comment=comment)
+        rev = ReviewModel(course_id=course.id, difficulty=difficulty, workLoad=workload, enjoyment=enjoyment, comment=comment, writer=current_user.id)
+
         db.session.add(rev)
         db.session.commit()
 
@@ -175,6 +205,17 @@ def genReviews():
     genRandomReviews(10)
     return redirect(url_for('home'))
 
+@app.route('/delete/<int:id>')
+@roles_accepted('Admin')
+def delete(id):
+    reviewtoDelete = ReviewModel.query.get(int(id))
+    try:
+        db.session.delete(reviewtoDelete)
+        db.session.commit()
+        return redirect('/')
+
+    except:
+        return "Couldn't delete review"
 
 @app.route('/clearReviews', methods=['GET', 'POST'])
 def delReviews():
@@ -193,6 +234,9 @@ def register():
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
 
         new_user = Users(username=username, password=hashed_password)
+        role = Role.query.filter_by(id=int(request.form['options'])).first()
+        if role:
+            Users.roles.append(role)
         db.session.add(new_user)
         db.session.commit()
 
@@ -210,4 +254,5 @@ def logout():
 if __name__ == '__main__':
     with app.app_context():
         seed_courses()
+        create_roles()
     app.run(debug=True)

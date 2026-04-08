@@ -115,14 +115,15 @@
             <h1>VIU Course Reviews</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
                 {% if current_user.is_authenticated %}
-                <form action="{{ url_for('genReviews') }}" method="POST">
-                    <button class="btn" type="submit">Generate Reviews</button>
-                </form>
-                <form action="{{ url_for('delReviews') }}" method="POST">
-                    <button class="btn" type="submit">Delete Reviews</button>
-                </form>
+                    {% if current_user.roles == 'admin' %}
+                    <form action="{{ url_for('genReviews') }}" method="POST">
+                        <button class="btn" type="submit">Generate Reviews</button>
+                    </form>
+                    <form action="{{ url_for('delReviews') }}" method="POST">
+                        <button class="btn" type="submit">Delete Reviews</button>
+                    </form>
+                    {% endif %}
                 <span style="color: #666; font-size: 14px;">Logged in as: {{ current_user.username }}</span>
-                <button class="btn" onclick="location.href='/createReview'">Leave a Review</button>
                 <a class="btn" href="/logout">Logout</a>
                 {% else %}
                 <a class="btn" href="/login">Login</a>
@@ -170,11 +171,15 @@
                     {% if c.reviews %}
                     {% for r in c.reviews %}
                     <div class="review">
+                        {{ r.writer }} &nbsp;
                         <strong>Difficulty:</strong> {{ r.difficulty }} &nbsp;
                         <strong>Workload:</strong> {{ r.workLoad }} &nbsp;
                         <strong>Enjoyment:</strong> {{ r.enjoyment }}
                         {% if r.comment %}
                         <div>{{ r.comment }}</div>
+                        {% endif %}
+                        {% if current_user.roles == 'Admin' %}
+                        <button class="btn outline" onclick="location.href='/delete'; event.stopPropagation();">Delete Review</button>
                         {% endif %}
                     </div>
                     {% endfor %}
