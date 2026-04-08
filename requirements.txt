@@ -3,3 +3,4 @@ flask_sqlalchemy
 flask_login
 werkzeug
 flask_security
+better_profanity
