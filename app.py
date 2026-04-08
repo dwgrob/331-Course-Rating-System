@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import random
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from flask_security import Security, SQLAlchemySessionUserDatastore, roles_accepted, RoleMixin
+from flask_security import SQLAlchemySessionUserDatastore, RoleMixin
 from better_profanity import profanity
 
 
@@ -19,13 +19,14 @@ login_manager.login_view = "login"
 db = SQLAlchemy(app)
 
 
-
+#The database model for the course
 class CourseModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # course number e.g. 311
     program = db.Column(db.String(32), nullable=False)  # e.g. CSCI
     courseYear = db.Column(db.Integer, nullable=False)
     reviews = db.relationship('ReviewModel', backref='course', cascade='all, delete-orphan', lazy=True)
 
+    #funtion to get average rating to us for the display
     def average_ratings(self):
         if not self.reviews:
             return {'difficulty': None, 'workLoad': None, 'enjoyment': None}
@@ -40,6 +41,7 @@ class CourseModel(db.Model):
         }
 
 
+#Database model for the reviews
 class ReviewModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course_model.id'), nullable=False)
@@ -49,11 +51,13 @@ class ReviewModel(db.Model):
     comment = db.Column(db.Text)
     writer = db.Column(db.String(50), nullable=False)
 
+#table to connect users and their roles
 roles_users = db.Table('roles_users', 
     db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
     db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
     )
 
+#Database model for users
 class Users(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -63,17 +67,19 @@ class Users(UserMixin, db.Model):
     def is_admin(self):
         return any(role.name == 'Admin' for role in self.roles)
 
+#Database model for Roles
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, Users, Role)
-#security = Security(app, user_datastore)
 
+#Preparing the database for when the app starts
 with app.app_context():
     db.create_all()
 
+#Creats the default courses once when the app first starts
 def seed_courses():
     default_courses = [
         (311, 'CSCI', 3),
@@ -88,6 +94,7 @@ def seed_courses():
             db.session.add(CourseModel(id=cid, program=prog, courseYear=yr))
     db.session.commit()
 
+#Creats the roles for when the app first starts
 def create_roles():
     if not Role.query.filter_by(name='Admin').first():
         db.session.add(Role(id=1, name='Admin'))
@@ -102,6 +109,7 @@ def get_courses():
         courses[c.id] = c
     return courses
 
+#Script to populate the database with some reviews
 def genRandomReviews(numReviews=10):
     courses = CourseModel.query.all()
 
@@ -128,11 +136,12 @@ def genRandomReviews(numReviews=10):
             db.session.add(review)
     db.session.commit()
 
+#Deletes all the reviews
 def clearReviews():
     ReviewModel.query.delete()
     db.session.commit()
 
-
+#Helps verify someone is logged in
 @login_manager.user_loader
 def loadUser(user_id):
     return Users.query.get(int(user_id)) 
