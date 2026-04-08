@@ -4,6 +4,8 @@ import random
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_security import Security, SQLAlchemySessionUserDatastore, roles_accepted, RoleMixin
+from better_profanity import profanity
+
 
 app = Flask(__name__)
 
@@ -156,6 +158,10 @@ def createReview():
             return "Ratings must be between 1 and 5", 400
 
         comment = request.form.get('comment', '')
+        if profanity.contains_profanity(comment): ##if swear, delete comment
+            comment = ''
+       
+        # comment = profanity.censor(comment, '****') ##REPLACES PROFANITY 
 
         course = db.session.get(CourseModel, course_num)
         if not course:
